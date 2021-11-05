@@ -10,10 +10,10 @@ public class CartItem {
     @GeneratedValue
     private Integer id;
 
-     @ManyToOne(fetch = FetchType.LAZY)
-     private Cart cart;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Cart cart;
 
-     @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Item item;
 
     private int quantity;
@@ -21,9 +21,19 @@ public class CartItem {
     protected CartItem() {
     }
 
-    public CartItem(Cart cart, Item item) {
-        this.cart = cart;
+    public CartItem(Item item, Cart cart) {
         this.item = item;
+        this.cart = cart;
+        this.quantity = 1;
+    }
+
+
+    public void increment() {
+        this.quantity++;
+    }
+
+    public void decrement() {
+        this.quantity--;
     }
 
     @Override
