@@ -13,9 +13,16 @@ public class Item {
     Integer id;
 
     private String name;
+    private String description;
     private double price;
 
     protected Item() {
+    }
+
+    public Item(String name, String description,double price) {
+        this.name = name;
+        this.price = price;
+        this.description = description;
     }
 
     public Item(String name, double price) {
@@ -28,8 +35,17 @@ public class Item {
         return "Item{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
                 ", price=" + price +
                 '}';
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
