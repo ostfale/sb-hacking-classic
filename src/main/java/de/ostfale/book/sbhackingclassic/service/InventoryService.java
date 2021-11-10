@@ -1,66 +1,78 @@
 package de.ostfale.book.sbhackingclassic.service;
 
+import de.ostfale.book.sbhackingclassic.model.Cart;
+import de.ostfale.book.sbhackingclassic.model.CartItem;
 import de.ostfale.book.sbhackingclassic.model.Item;
-import de.ostfale.book.sbhackingclassic.repositories.ItemByExampleRepository;
+import de.ostfale.book.sbhackingclassic.repositories.CartRepository;
 import de.ostfale.book.sbhackingclassic.repositories.ItemRepository;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryService {
 
     private final ItemRepository itemRepository;
-    private final ItemByExampleRepository itemByExampleRepository;
+    private final CartRepository cartRepository;
 
-    public InventoryService(ItemRepository itemRepository, ItemByExampleRepository itemByExampleRepository) {
+    public InventoryService(ItemRepository itemRepository, CartRepository cartRepository) {
         this.itemRepository = itemRepository;
-        this.itemByExampleRepository = itemByExampleRepository;
+        this.cartRepository = cartRepository;
     }
 
-    List<Item> getItems() {
-        // imagine calling a remote service!
-        return Collections.emptyList();
+    public Optional<Cart> getCart(String cartId) {
+        return this.cartRepository.findById(cartId);
     }
 
-
-    public Iterable<Item> searchByExample(String name, String description, boolean useAnd) {
-        Item item = new Item(name, description, 0.0);
-
-        ExampleMatcher matcher = (useAnd
-                ? ExampleMatcher.matchingAll()
-                : ExampleMatcher.matchingAny())
-                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)
-                .withIgnoreCase()
-                .withIgnorePaths("price");  // ignore price field
-
-        Example<Item> probe = Example.of(item, matcher);
-        return itemByExampleRepository.findAll(probe);
+    public Iterable<Item> getInventory() {
+        return this.itemRepository.findAll();
     }
 
-    // old and much more chatty implementation of the search above
-    public Iterable<Item> search(String partialName, String partialDescription, boolean useAnd) {
-        if (partialName != null) {
-            if (partialDescription != null) {
-                if (useAnd) {
-                    return itemRepository
-                            .findByNameContainingAndDescriptionContainingAllIgnoreCase(partialName, partialDescription);
-                } else {
-                    return itemRepository.findByNameContainingOrDescriptionContainingAllIgnoreCase(
-                            partialName, partialDescription);
-                }
-            } else {
-                return itemRepository.findByNameContaining(partialName);
-            }
-        } else {
-            if (partialDescription != null) {
-                return itemRepository.findByDescriptionContainingIgnoreCase(partialDescription);
-            } else {
-                return itemRepository.findAll();
-            }
-        }
+    public Item saveItem(Item newItem) {
+        return this.itemRepository.save(newItem);
+    }
+
+    public void deleteItem(Integer id) {
+        this.itemRepository.deleteById(id);
+    }
+
+    public Cart addItemToCart(String cartId, Integer itemId) {
+
+        Cart cart = this.cartRepository.findById(cartId)
+                .orElseGet(() -> new Cart("My Cart"));
+
+        cart.getCartItems().stream()
+                .filter(cartItem -> cartItem.getItem().getId().equals(itemId)) //
+                .findAny() //
+                .map(cartItem -> {
+                    cartItem.increment();
+                    return cart;
+                }) //
+                .orElseGet(() -> {
+                    Item item = this.itemRepository.findById(itemId).orElseThrow(() -> new IllegalStateException("Can't seem to find Item type " + itemId));
+                    cart.getCartItems().add(new CartItem(item, cart));
+                    return cart;
+                });
+
+        return this.cartRepository.save(cart);
+    }
+
+    public Cart removeOneFromCart(String cartId, Integer itemId) {
+
+        Cart cart = this.cartRepository.findById("My Cart").orElseGet(() -> new Cart("My Cart"));
+
+        cart.getCartItems().stream()
+                .filter(cartItem -> cartItem.getItem().getId().equals(itemId)) //
+                .findAny()
+                .ifPresent(CartItem::decrement);
+
+        List<CartItem> updatedCartItems = cart.getCartItems().stream() //
+                .filter(cartItem -> cartItem.getQuantity() > 0) //
+                .collect(Collectors.toList());
+
+        cart.setCartItems(updatedCartItems);
+        return this.cartRepository.save(cart);
     }
 }

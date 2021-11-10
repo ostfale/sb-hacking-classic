@@ -1,51 +1,50 @@
 package de.ostfale.book.sbhackingclassic.controller;
 
-import de.ostfale.book.sbhackingclassic.repositories.ItemRepository;
-import de.ostfale.book.sbhackingclassic.service.CartService;
+import de.ostfale.book.sbhackingclassic.model.Cart;
+import de.ostfale.book.sbhackingclassic.model.Item;
 import de.ostfale.book.sbhackingclassic.service.InventoryService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class HomeController {
 
-    private final ItemRepository itemRepository;
-    private final CartService cartService;
     private final InventoryService inventoryService;
 
-
-    public HomeController(ItemRepository itemRepository, CartService cartService, InventoryService inventoryService) {
-        this.itemRepository = itemRepository;
-        this.cartService = cartService;
+    public HomeController(InventoryService inventoryService) {
         this.inventoryService = inventoryService;
     }
 
     @GetMapping
     String home(Model model) {
-        model.addAttribute("items", this.itemRepository.findAll());
-        model.addAttribute("cart", cartService.getCartById("My Cart"));
-        this.itemRepository.findAll().forEach(System.out::println);
+        model.addAttribute("items", this.inventoryService.getInventory());
+        model.addAttribute("cart", this.inventoryService.getCart("My Cart") //
+                .orElseGet(() -> new Cart("My Cart")));
         return "home";
     }
 
     @PostMapping("/add/{id}")
     String addToCart(@PathVariable Integer id) {
-        cartService.addToCart("My Cart", id);
+        this.inventoryService.addItemToCart("My Cart", id);
         return "redirect:/";
     }
 
-    @GetMapping("/search")
-    String search(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String description,
-            @RequestParam boolean useAnd,
-            Model model) {
-        model.addAttribute("results", inventoryService.searchByExample(name, description, useAnd));
-        return "home";
+    @DeleteMapping("/remove/{id}")
+    String removeFromCart(@PathVariable Integer id) {
+        this.inventoryService.removeOneFromCart("My Cart", id);
+        return "redirect:/";
     }
 
+    @PostMapping
+    String createItem(@RequestBody Item newItem) {
+        this.inventoryService.saveItem(newItem);
+        return "redirect:/";
+    }
+
+    @DeleteMapping("/delete/{id}")
+    String deleteItem(@PathVariable Integer id) {
+        this.inventoryService.deleteItem(id);
+        return "redirect:/";
+    }
 }
