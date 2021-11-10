@@ -28,6 +28,7 @@ public class HomeController {
     String home(Model model) {
         model.addAttribute("items", this.itemRepository.findAll());
         model.addAttribute("cart", cartService.getCartById("My Cart"));
+        this.itemRepository.findAll().forEach(System.out::println);
         return "home";
     }
 
