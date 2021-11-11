@@ -7,6 +7,7 @@ import de.ostfale.book.sbhackingclassic.repositories.CartRepository;
 import de.ostfale.book.sbhackingclassic.repositories.ItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -14,6 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -29,10 +31,12 @@ class InventoryServiceUnitTest {
     @MockBean
     private CartRepository cartRepository;
 
+    private Item sampleItem;
+
     @BeforeEach
     void setUp() {
         // define test data
-        Item sampleItem = new Item(1, "TV Tray", "Alf TV Tray", 19.99);
+        sampleItem = new Item(1, "TV Tray", "Alf TV Tray", 19.99);
         CartItem cartItem = new CartItem(sampleItem, null);
         Cart sampleCart = new Cart("My Cart", Collections.singletonList(cartItem));
         cartItem.setCart(sampleCart);
@@ -41,7 +45,18 @@ class InventoryServiceUnitTest {
         when(cartRepository.findById(anyString())).thenReturn(Optional.empty());
         when(itemRepository.findById(anyInt())).thenReturn(Optional.of(sampleItem));
         when(cartRepository.save(any(Cart.class))).thenReturn(sampleCart);
-
         inventoryService = new InventoryService(itemRepository, cartRepository);
+    }
+
+    @Test
+    @DisplayName("Add item to an empty cart")
+    void addItemToEmptyCartShouldProduceOneCartItem() {
+        // when
+        Cart cart = inventoryService.addItemToCart("My Cart", 1);
+        // then
+        assertThat(cart.getCartItems()).extracting(CartItem::getQuantity)
+                .containsExactlyInAnyOrder(1);
+        assertThat(cart.getCartItems()).extracting(CartItem::getItem)
+                .containsExactly(sampleItem);
     }
 }
