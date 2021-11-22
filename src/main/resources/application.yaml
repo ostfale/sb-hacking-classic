@@ -1,3 +1,26 @@
 logging:
   level:
     web: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,loggers,httptrace,configprops,env
+
+
+info:
+  project:
+    version:@project.version@
+  java:
+    version: @java.version@
+  spring:
+    framework:
+      version: @spring-framework.version@
+    data:
+      version: @spring-data-bom.version@
