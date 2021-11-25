@@ -17,3 +17,14 @@ Fan of HTTPie? You can issue the following command:
 include::{snippets}/findAll/httpie-request.adoc[]
 
 ...and get the same response. The choice is yours.
+
+include::{snippets}/findOne-hypermedia/links.adoc[]
+
+By running the following HATEOAS request:
+
+include::{snippets}/findOne-hypermedia/curl-request.adoc[]
+
+...the `ApiItemController` will yield the following response:
+
+include::{snippets}/findOne-hypermedia/response-body.adoc[]
+
