@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class RepositoryDatabaseLoader {
 
-    @Bean
+  /*  @Bean
     CommandLineRunner initializer(ItemRepository repository) {
         return args -> {
             repository.save(new Item("Alf - Alarm Clock", 19.99));
             repository.save(new Item("Smurf - TV Tray", 24.99));
         };
-    }
+    }*/
 }
