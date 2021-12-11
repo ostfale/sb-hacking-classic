@@ -27,9 +27,7 @@ public class SecurityConfig {
 
     @Bean
     public CommandLineRunner userLoader(UserRepository repository) {
-        return args -> {
-            repository.save(createDefaultUser());
-        };
+        return args -> repository.save(createDefaultUser());
     }
 
     private de.ostfale.book.sbhackingclassic.model.User createDefaultUser() {
